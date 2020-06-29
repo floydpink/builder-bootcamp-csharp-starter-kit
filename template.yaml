@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  builder-bootcamp-csharp-starter-kit
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+
+  GetLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/AWS.ProServeSDT.Bootcamp/bin/Release/netcoreapp3.1/publish
+      Handler: AWS.ProServeSDT.Bootcamp::AWS.ProServeSDT.Bootcamp.Functions::Get
+      Runtime: dotnetcore3.1
+      Events:
+        GetData:
+          Type: Api
+          Properties:
+            Path: /data
+            Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: 'data-table'
+
+  PostLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/AWS.ProServeSDT.Bootcamp/bin/Release/netcoreapp3.1/publish
+      Handler: AWS.ProServeSDT.Bootcamp::AWS.ProServeSDT.Bootcamp.Functions::Post
+      Runtime: dotnetcore3.1
+      Events:
+        GetData:
+          Type: Api
+          Properties:
+            Path: /data
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: 'data-table'
+
+  DataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "data"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "data"
+          KeyType: "HASH"
+      BillingMode: PAY_PER_REQUEST
+      TableName: "data-table"
+
+Outputs:
+  GetApi:
+    Description: "API Gateway endpoint URL for Prod stage for Get function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/Get/"
+  GetFunction:
+    Description: "Get Lambda Function ARN"
+    Value: !GetAtt GetLambdaFunction.Arn
+  GetFunctionIamRole:
+    Description: "Implicit IAM Role created for Get function"
+    Value: !GetAtt GetLambdaFunctionRole.Arn
+
+  PostApi:
+    Description: "API Gateway endpoint URL for Prod stage for Post function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/Post/"
+  PostFunction:
+    Description: "Post Lambda Function ARN"
+    Value: !GetAtt PostLambdaFunction.Arn
+  PostFunctionIamRole:
+    Description: "Implicit IAM Role created for Post function"
+    Value: !GetAtt PostLambdaFunctionRole.Arn
